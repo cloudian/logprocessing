@@ -1,0 +1,60 @@
+CDR Logprocessing plugin for Flume
+==================================
+
+This plugin allows you to use Cassandra as a Flume sink for CDR logs. 
+
+Getting Started
+---------------
+
+1) This pugin was built using flume-0.9.3-core.jar, which is delivered as part of package. 
+
+2) cd cassandra; ant;
+
+3) Copy cdr_logprocessing-0.1.jar to your flume lib directory. 
+
+4) Add cdr_logprocessing-0.1.jar to your FLUME_CLASSPATH if you copied this 
+jar to a different location in step (3)
+
+4. Modify flume-site.xml (you may start out by copying
+flume-site.xml.template and removing the body of the file) to include:
+
+
+    <configuration>
+      <property>
+        <name>flume.plugin.classes</name>
+        <value>com.gemini.logprocessing.cassandra.CDRCassandraSink</value>
+        <description>Comma separated list of plugin classes</description>
+      </property>
+    </configuration>
+
+Usage
+-----
+
+This plugin primarily targets CDR log storage right now.
+
+1) The following needs to be installed in cassandra using cli
+
+connect <hostname>/9160
+create keyspace CDRLogs with replication_factor = 2 and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+use CDRLogs
+create column family MSISDNTimeline with column_type = 'Standard' and comparator = 'BytesType'
+create column family CDREntry with column_type = 'Standard' and comparator = 'BytesType'
+create column family HourlyTimeline with column_type = 'Standard' and comparator = 'BytesType'
+
+2) In flume config you call this sink as
+
+CDRCassandraSink("cassandra_host:cassandra_port",ColumnFamilyForRawCDR);
+
+where
+
+cassandra_host:cassandra_port - cassandra host/port combination
+ColumnFamilyforRawCDR - CF where raw cdr entries for this market are to be stored. 
+
+
+Issues
+------
+
+1) CDR format currently supported is of form
+
+operatorId,operatorMarket,transactionId,cdrType,messageTimestamp,moIMSI,moIP,mtIP,PTN,msgType,moDomain,mtDomain
+
