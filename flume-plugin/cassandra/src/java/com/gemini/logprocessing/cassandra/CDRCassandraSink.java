@@ -72,8 +72,8 @@ public class CDRCassandraSink extends EventSink.Base {
     private static final String KS_CDRLOG = "CDRLogs";
     private static final String CLUSTER_NAME = "CDR";
     private static final String CF_ENTRY = "CDREntry";
-    private static final String CF_MSISDN = "MSISDNTimeLine";
-    private static final String CF_HOURLY = "HourlyTimeLine";
+    private static final String CF_MSISDN = "MSISDNTimeline";
+    private static final String CF_HOURLY = "HourlyTimeline";
     private static final StringSerializer stringSerializer = StringSerializer.get();
     private static final BytesArraySerializer bytesSerializer = BytesArraySerializer.get();
 
@@ -92,7 +92,7 @@ public class CDRCassandraSink extends EventSink.Base {
     private static final String rawColumnFamily = "RawCDREntry";
 
     private static final long MILLI_TO_MICRO = 1000; // 1ms = 1000us
-    private static final Logger LOGGER = LoggerFactory.getLogger(CDRCassandraSink.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CDRCassandraSink.class.getName());
     private static final String[] CDRENTRY_NAME = {"type",
 						   "market",
 						   "id",
@@ -123,7 +123,7 @@ public class CDRCassandraSink extends EventSink.Base {
 	try {
 	    cluster.addColumnFamily(new ThriftCfDef((cfo)));
 	} catch (HInvalidRequestException e) {
-	    e.printStackTrace();
+	    //e.printStackTrace();
 	    //Ignore for now. CF could already exist, which need not be
 	    //an error.
 	}
@@ -156,9 +156,10 @@ public class CDRCassandraSink extends EventSink.Base {
 	    //
 	    //op,market,tid,mdr_type,msg_ts,imsi,mo_ip,mt_ip,ptn,msg_type,mo_domain,mt_domain
 		String rawEntry = new String(event.getBody());
+		logger.debug("RAW: " + rawEntry);
 		String[] rawEntries = rawEntry.split("\\,");
 		for(int i = 0; i < CDRENTRY_NAME.length; i++) {
-		    mutator.addInsertion(uuid.toByteArray(),
+		    mutator.addInsertion(uuid.toString().getBytes(),
 				  CF_ENTRY,
 				  createColumn(CDRENTRY_NAME[i].getBytes(),
 				    rawEntries[CDRENTRY_MAP[i]].getBytes()));
@@ -172,11 +173,11 @@ public class CDRCassandraSink extends EventSink.Base {
 					   uuid.toByteArray()));
  
 		mutator.addInsertion(Long.toString(timestamp).getBytes(),
-			      CF_MSISDN,
+			      CF_HOURLY,
 			      createColumn(Long.toString(timestamp).getBytes(),
 					   uuid.toByteArray()));
  
-		mutator.addInsertion(uuid.toByteArray(),
+		mutator.addInsertion(uuid.toString().getBytes(),
 			      m_CFRawCdr,
 			      createColumn(uuid.toByteArray(),
 					   event.getBody()));
