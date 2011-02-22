@@ -1,0 +1,5 @@
+export FLUME_HOME=/localspace/flume/
+export FLUME_LOG_DIR=/localspace/flume/log
+export FLUME_PID_DIR=/localspace/flume/run
+export FLUME_CONF_DIR=/localspace/flume/conf
+./bin/flume node_nowatch -n agent1

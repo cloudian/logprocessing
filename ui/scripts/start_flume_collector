@@ -1,0 +1,6 @@
+export FLUME_HOME=/localspace/flume/
+export FLUME_LOG_DIR=/localspace/flume/log
+export FLUME_PID_DIR=/localspace/flume/run
+export FLUME_CONF_DIR=/localspace/flume/conf
+export FLUME_CLASSPATH=/localspace/flume/plugins/flume-cassandra-plugin/cdr_cassandra_plugin.jar:/localspace/flume/plugins/flume-cassandra-plugin/hector-0.7.0-19_11082010.jar:/localspace/flume/plugins/flume-cassandra-plugin/lib/jug-asl-2.0.0.jar
+./bin/flume node_nowatch -n collector

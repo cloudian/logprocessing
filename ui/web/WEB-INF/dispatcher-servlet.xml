@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+
+
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+  		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+  		<property name="prefix" value="/jsp/"/>
+  		<property name="suffix" value=".jsp"/>
+	</bean>
+
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>/WEB-INF/resources</value>
+				<value>/WEB-INF/messages</value>
+			</list>
+		</property>
+		<property name="cacheSeconds">
+			<value>2</value>
+		</property>
+	</bean>
+			
+	<bean name="/search.htm" class="com.geminimobile.web.SearchController">
+	  	<property name="commandClass" value="com.geminimobile.web.SearchCommand"/>
+	  	<property name="commandName" value="searchCmd"/>
+  		<property name="formView" value="search"/>
+  		<property name="successView" value="search"/>
+	</bean>	
+
+	<bean name="/downloadCSV.htm" class="com.geminimobile.web.DownloadCSVController">
+	</bean>	
+	
+	<bean name="/cdrgraph.png" class="com.geminimobile.web.GeminiChartController">
+    </bean>
+	
+	
+</beans>

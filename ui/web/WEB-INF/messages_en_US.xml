@@ -1,0 +1,19 @@
+ <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+ 
+ <properties>
+ 
+   <entry key="gemini.useralreadyexists">
+     User name already exists.  Choose a different name.
+   </entry>
+
+   <entry key="gemini.passwordsnotmatching">
+     Password fields do not match.  Make sure you confirm the password.
+   </entry>
+   <entry key="gemini.invalidpassword">
+     Invalid password for user.
+   </entry>
+   <entry key="gemini.usernamenotfound">
+     User name is not found.
+   </entry>
+
+ </properties>

@@ -1,0 +1,23 @@
+Here are the CLI commands used to create the schema. This schema is required for the CDRSearch application.
+To input the schema, run the cassandra CLI:
+<path to cassandra/bin/cassandra-cli --host <hostname>
+
+Then enter the lines below, one by one (don't enter the comments).  The CLI has an option to run a batch file of commands, but this does not seem to work yet.
+-------
+
+/* create a new keyspace */
+create keyspace CDRLogs with replication_factor = 1 and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+
+/* switch to the new keyspace */
+use CDRLogs
+
+/* MSISDNTimeline - keyed by MSISDN (string). Column names are time stamps (long values in ms). */
+create column family MSISDNTimeline with column_type = 'Standard' and comparator = 'LongType' and rows_cached = 10000
+/* CDREntry - keyed by UUID (string). */
+/* Columns are: 
+create column family CDREntry with column_type = 'Standard' and comparator = 'BytesType' and rows_cached = 10000
+
+/* HourlyTimeline - keyed by hour (long value in ms). Column names are time stamps (long value in ms) */
+create column family HourlyTimeline with column_type = 'Standard' and comparator = 'LongType' and rows_cached = 10000
+
+create column family RawCDREntry_market1 with column_type = 'Standard' and comparator = 'BytesType'

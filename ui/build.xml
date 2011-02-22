@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+
+<!--
+ ~ Copyright: (c) 2008-2010 Gemini Mobile Technologies, Inc.  All rights reserved.
+ ~
+ ~ Licensed under the Apache License, Version 2.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     http://www.apache.org/licenses/LICENSE-2.0
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+ -->
+
+<project name="cdrsearch" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+  <!-- all the paths stuff -->
+  <property name="basedir" value="."/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="build.dir.lib" value="${build.dir}/lib"/>
+  <property name="build.dir.classes" value="${build.dir}/classes"/>
+  <property name="thirdparty.dir" value="${basedir}"/>
+  <property name="thirdparty.jars" value="${build.dir.lib}/jars"/>
+  <property name="web.dir" value="${basedir}/web/WEB-INF"/>
+
+  <!-- system variables -->
+  <property environment="env"/>
+  <property name="javac.debug" value="off"/>
+  <property name="ivy.version" value="2.1.0" />
+  <property name="ivy.url"
+            value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
+
+  <!-- some simple true-n-false checks -->
+  <condition property="ivy.jar.exists">
+    <available file="${build.dir}/ivy-${ivy.version}.jar" />
+  </condition>
+
+  <!-- classpaths -->
+  <path id="autoivy.classpath">
+     <fileset dir="${build.dir.lib}">
+       <include name="**/*.jar" />
+     </fileset>
+     <pathelement location="${build.dir}/ivy-${ivy.version}.jar"/>
+  </path>
+
+  <path id="cdrsearch.classpath">
+
+    <fileset dir="${thirdparty.jars}">
+      <include name="**/*.jar"/>
+    </fileset>
+
+    <!-- in case we are running in dev env -->
+    <pathelement location="${build.dir.classes}"/>
+    <fileset dir="${env.FLUME_HOME}">
+      <include name="flume-*-core.jar" />
+    </fileset>
+
+    <fileset dir="${env.CASSANDRA_HOME}/lib">
+      <include name="apache-cassandra-*.jar" />
+    </fileset>
+
+    <fileset dir="${web.dir}/lib">
+      <include name="jug-asl-*.jar" />
+      <include name="hector-*.jar" />
+      <include name="jfreechart-*.jar" />
+    </fileset>
+  </path>
+
+  <!-- Fetch Ivy and dependencies -->
+  <target name="ivy-download" unless="ivy.jar.exists">
+    <echo>Downloading Ivy...</echo>
+    <mkdir dir="${build.dir}" />
+    <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
+         dest="${build.dir}/ivy-${ivy.version}.jar" usetimestamp="true" />
+  </target>
+
+  <target name="ivy-init" depends="ivy-download" unless="ivy.initialized">
+    <mkdir dir="${build.dir.lib}"/>
+    <taskdef resource="org/apache/ivy/ant/antlib.xml"
+             uri="antlib:org.apache.ivy.ant"
+             classpathref="autoivy.classpath"/>
+    <property name="ivy.initialized" value="true"/>
+  </target>
+
+  <target name="ivy-retrieve-build" depends="ivy-init">
+    <ivy:retrieve type="jar,source" sync="true"
+           pattern="${build.dir.lib}/[type]s/[artifact]-[revision].[ext]" />
+  </target>
+
+  <!-- compile the classes -->
+  <target name="compile" depends="clean">
+    <mkdir dir="${build.dir}/classes"/>
+    <javac srcdir="./src/java" destdir="build/classes" debug="${javac.debug}">
+      <classpath refid="cdrsearch.classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="ivy-retrieve-build,compile">
+    <jar jarfile="cdr_search.jar"
+         basedir="${build.dir.classes}"
+         includes="com/geminimobile/**"
+         excludes="**/ExampleClient.class,**/logger/MdrCreater.class,**/RawCdrAccess.class"
+    />
+
+    <jar jarfile="cdr_cassandra_plugin.jar"
+         basedir="${build.dir.classes}"
+         includes="org/apache/cassandra/**"/>
+
+    <jar jarfile="mdr_create.jar"
+         basedir="${build.dir.classes}"
+         includes="com/geminimobile/logger/MdrCreater.class,com/geminimobile/RawCdrAccess.class,com/geminimobile/DataAccessObject.class,com/geminimobile/util/Configuration.class">
+      <manifest>
+        <attribute name="Main-Class"
+                   value="com.geminimobile.logger.MdrCreater"/>
+      </manifest>
+    </jar>
+  </target>
+
+
+  <target name="clean">
+    <echo message="Cleaning generated classes and jars"/>
+    <delete dir="${build.dir.classes}" />
+    <delete file="cdr_search.jar" />
+    <delete file="cdr_cassandra_plugin.jar" />
+    <delete file="mdr_create.jar" />
+  </target>
+
+  <target name="deepclean" depends="clean">
+    <delete dir="${build.dir}" />
+  </target>
+
+</project>

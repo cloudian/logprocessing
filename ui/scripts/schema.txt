@@ -1,0 +1,7 @@
+connect <hostname>/9160
+create keyspace CDRLogs with replication_factor = 1 and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+use CDRLogs
+create column family MSISDNTimeline with column_type = 'Standard' and comparator = 'BytesType' 
+create column family CDREntry with column_type = 'Standard' and comparator = 'BytesType' 
+create column family HourlyTimeline with column_type = 'Standard' and comparator = 'BytesType'
+create column family RawCDREntry_market1 with column_type = 'Standard' and comparator = 'BytesType'
