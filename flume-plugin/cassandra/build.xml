@@ -140,4 +140,22 @@
     </javadoc>
   </target>
 
+       <target name="release" depends="jar">
+                <tar destfile="${dist.name}-${dist.version}.tar.gz" compression="gzip">
+                        <tarfileset dir="." prefix="cdrplugin/lib">
+                                <include name="${dist.jar}"/>
+                        </tarfileset>
+                        <tarfileset dir="${thirdparty.jars}" prefix="cdrplugin/lib">
+                                <include name="hector*"/>
+                                <include name="log4j*"/>
+                                <include name="slf4*"/>
+                                <include name="jug-*"/>
+                                <include name="avro*"/>
+                                <include name="apache-cassandra*"/>
+                                <include name="commons-*"/>
+                                <include name="high-scale-lib-*"/>
+                                <include name="perf4j-*"/>
+                        </tarfileset>
+                </tar>
+  </target>
 </project>
