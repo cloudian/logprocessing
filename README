@@ -1,0 +1,120 @@
+CDR Logprocessing plugin for Flume
+==================================
+
+Source organization
+
+flume-plugin - source of flume plugin that writes CDR logs to cassandra.
+scripts - simple perl script that generates sample CDR logs for testing. 
+
+
+
+Getting Flume & Thrift
+======================
+
+
+https://github.com/cloudera/flume (master was used to test sample)
+http://incubator.apache.org/thrift/download/
+
+Thrift was compiled with the following option
+
+./configure --enable-gen-java=yes --enable-gen-cpp=yes --enable-gen-erlang=no --enable-gen-perl=no --enable-gen-py=no --enable-gen-php=no --with-boost=no; make
+
+Assuming flume was installed under $HOME/flume, create a symlink to thrift-0.5.0/compiler/cpp/thrift, under $HOME/flume
+
+Under $HOME/flume, ant
+
+
+flume-plugin
+============
+
+This plugin allows you to use Cassandra as a Flume sink for CDR logs. 
+
+
+Getting Started
+---------------
+
+1) This pugin was built using flume-0.9.3-core.jar, which is delivered as part of package. 
+
+2) cd cassandra; ant release;
+
+3) Copy cdr_logprocessing-0.1.tar.gz to $HOME/flume directory and uncompress it.
+
+4) Add the following to your .bashrc file
+
+export FLUME_HOME=$HOME/flume
+export FLUME_LOG_DIR=/tmp
+export FLUME_PID_DIR=/tmp
+export FLUME_CONF_DIR=$HOME/flume/conf
+export FLUME_CLASSPATH=$HOME/flume/cdrplugin/lib/apache-cassandra-0.7.0.jar:$HOME/flume/cdrplugin/lib/avro-1.4.0-rc4.jar:$HOME/flume/cdrplugin/lib/cdr_logprocessing-0.1.jar:$HOME/flume/cdrplugin/lib/commons-lang-2.4.jar:$HOME/flume/cdrplugin/lib/hector-core-0.7.0-22.jar:$HOME/flume/cdrplugin/lib/high-scale-lib-1.1.1.jar:$HOME/flume/cdrplugin/lib/jug-asl-2.0.0.jar:$HOME/flume/cdrplugin/lib/log4j-1.2.14.jar:$HOME/flume/cdrplugin/lib/perf4j-0.9.13.jar:$HOME/flume/cdrplugin/lib/slf4j-api-1.5.11.jar:$HOME/flume/cdrplugin/lib/slf4j-log4j12-1.5.8.jar
+
+4. Modify flume-site.xml (you may start out by copying
+flume-site.xml.template and removing the body of the file) to include:
+
+
+    <configuration>
+      <property>
+        <name>flume.plugin.classes</name>
+        <value>com.gemini.logprocessing.cassandra.CDRCassandraSink</value>
+        <description>Comma separated list of plugin classes</description>
+      </property>
+    </configuration>
+
+scripts
+=======
+
+loggen.pl will write sample CDR entries to /tmp/cdr.log. We can use this script for testing our setup. 
+
+Usage
+-----
+
+This plugin primarily targets CDR log storage right now.
+
+1) The following needs to be installed in cassandra using cli
+
+connect <hostname>/9160;
+create keyspace CDRLogs with replication_factor = 2 and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy';
+use CDRLogs;
+create column family MSISDNTimeline with column_type = 'Standard' and comparator = 'BytesType';
+create column family CDREntry with column_type = 'Standard' and comparator = 'BytesType';
+create column family HourlyTimeline with column_type = 'Standard' and comparator = 'BytesType';
+
+2) In flume config you call this sink as
+
+CDRCassandraSink("cassandra_host:cassandra_port",ColumnFamilyForRawCDR);
+
+where
+
+cassandra_host:cassandra_port - cassandra host/port combination
+ColumnFamilyforRawCDR - CF where raw cdr entries for this market are to be stored. 
+
+
+3) In our test environment, we had NodeM - running flume master, NodeA -  running flume agent and NodeC - running flume collector & cassandra-0.7.2
+    3.1) On NodeM
+	3.1.1) Export all environment variables. 
+	3.1.2) cd $FLUME_HOME; bin/flume master
+	3.1.3) http://NodeM:35871/flumemaster.jsp will all active nodes and their configuration.
+    3.2) On NodeA
+	3.2.1) Edit flume-site.xml and add NodeM as master
+	3.2.2) cd $FLUME_HOME; bin/flume node_nowatch
+	3.2.3) http://NodeA:35862/flumeagent.jsp will display statistics.
+    3.3) On NodeC
+	3.3.1) Edit flume-site.xml and add NodeM as master
+	3.3.2) cd $FLUME_HOME; bin/flume node_nowatch -n collector
+	3.3.3) http://NodeC:35862/flumeagent.jsp will display statistics.
+
+4) Go to http://NodeM:35871/flumeconfig.jsp and configure the nodes. 
+    4.1) For NodeA - Source is tail("/tmp/cdr.log") and Sink is agentSink("NodeC",35853)
+    4.2) For NodeC - Source is collectorSource(35853) and Sink is CDRCassandraSink("NodeC:9160", "CDRRaw_market1")
+    
+5) Go to http://NodeM:35871/flumemaster.jsp and if nodes were configured correctly, all nodes should show up as 'ACTIVE'
+6) On NodeA - run the script perl loggen.pl (NOTE: This script will write to log file in a for(;;) loop)
+7) Verify data in cassandra using cassandra-cli;
+
+
+Issues
+------
+
+1) CDR format currently supported is of form
+
+operatorId,operatorMarket,transactionId,cdrType,messageTimestamp,moIMSI,moIP,mtIP,PTN,msgType,moDomain,mtDomain
+
