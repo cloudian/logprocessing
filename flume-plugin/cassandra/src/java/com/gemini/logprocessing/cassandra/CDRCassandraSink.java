@@ -104,9 +104,8 @@ public class CDRCassandraSink extends EventSink.Base {
 						   "recipientdomain"};
     private static final int[] CDRENTRY_MAP = {0,1,2,4,6,7,8,10,11};
 
-    public CDRCassandraSink(final String server, 
-			    final String cfRawData) 
-	throws IOException {
+    public CDRCassandraSink(String server, 
+			    String cfRawData) {
     
 	cluster = getOrCreateCluster(CLUSTER_NAME, server);
 	keyspace = createKeyspace(KS_CDRLOG, cluster);
@@ -196,6 +195,30 @@ public class CDRCassandraSink extends EventSink.Base {
     @Override
     public void close() throws IOException {
 	//Do nothing.
+    }
+
+    public static SinkBuilder builder() {
+	return new SinkBuilder() {
+	@Override
+	public EventSink build(Context context, String ... args) {
+	    if (args.length < 2) {
+          throw new IllegalArgumentException(
+              "usage: CDRCassandraSink(\"host:port\", \"raw_cdr_column_family\")");
+        }
+        return new CDRCassandraSink(args[0], args[1]);
+      }
+    };
+  }
+
+  /**
+   * This is a special function used by the SourceFactory to pull in this class
+   * as a plugin sink.
+   */
+    public static List<Pair<String, SinkBuilder>> getSinkBuilders() {
+	List<Pair<String, SinkBuilder>> builders =
+	new ArrayList<Pair<String, SinkBuilder>>();
+	builders.add(new Pair<String, SinkBuilder>("CDRCassandraSink", builder()));
+	return builders;
     }
 
     private HColumn<byte[], byte[]> createColumn(byte[] name, byte[] value) {
