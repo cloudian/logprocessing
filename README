@@ -15,7 +15,7 @@ Getting Flume & Thrift
 https://github.com/cloudera/flume (master was used to test sample)
 http://incubator.apache.org/thrift/download/
 
-Thrift was compiled with the following option
+Thrift was compiled with the following option:
 
 ./configure --enable-gen-java=yes --enable-gen-cpp=yes --enable-gen-erlang=no --enable-gen-perl=no --enable-gen-py=no --enable-gen-php=no --with-boost=no; make
 
@@ -33,7 +33,7 @@ This plugin allows you to use Cassandra as a Flume sink for CDR logs.
 Getting Started
 ---------------
 
-1) This pugin was built using flume-0.9.3-core.jar, which is delivered as part of package. 
+1) This plugin was built using flume-0.9.3-core.jar, which is delivered as part of package. 
 
 2) cd cassandra; ant release;
 
