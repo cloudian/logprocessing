@@ -3,8 +3,8 @@
   <resolvers>
     <chain name="chain" dual="true">
 
-      <ibiblio name="riptano" 
-               root="http://mvn.riptano.com/content/repositories/public/"
+      <ibiblio name="maven" 
+               root="http://repo2.maven.org/maven2/"
                m2compatible="true"
 							 usepoms="false" />
 
